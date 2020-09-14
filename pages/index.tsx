@@ -60,39 +60,52 @@ export default function Home({ post: originalPost, user }: Props) {
   const [post, setPost] = useState<Post>(originalPost);
   const [failure, setFailure] = useState<Failure>(null);
 
-  const upvote = async (): Promise<void> => {
+  async function runOptimisticOperation<T>(
+    operation: () => Promise<T>,
+    optimisticUpdate: () => void,
+    failureDescription: string,
+    actualUpdate?: (res: T) => void,
+  ): Promise<void> {
     const oldPost = cloneDeep(post);
     try {
       setFailure(null);
-      setPost({ ...post, upvotes: post.upvotes + 1 });
-      await sendUpvote(post.id);
+      optimisticUpdate();
+      const res = await operation();
+      actualUpdate?.(res);
     } catch (err) {
       setPost(oldPost);
       setFailure({
-        description: 'Failed to upvote',
-        retry: upvote,
+        description: failureDescription,
+        retry: () =>
+          runOptimisticOperation(
+            operation,
+            optimisticUpdate,
+            failureDescription,
+            actualUpdate,
+          ),
       });
     }
-  };
+  }
+
+  const upvote = async (): Promise<void> =>
+    runOptimisticOperation(
+      () => sendUpvote(post.id),
+      () => setPost({ ...post, upvotes: post.upvotes + 1 }),
+      'Failed to upvote',
+    );
 
   const comment = async (content: string): Promise<void> => {
-    const oldPost = cloneDeep(post);
-    try {
-      setFailure(null);
-      const localComment = {
-        author: user,
-        content,
-      };
-      setPost({ ...post, comments: [...post.comments, localComment] });
-      const newComment = await sendComment(post.id, localComment);
-      setPost({ ...post, comments: [...post.comments, newComment] });
-    } catch (err) {
-      setPost(oldPost);
-      setFailure({
-        description: 'Failed to comment',
-        retry: async () => comment(content),
-      });
-    }
+    const localComment = {
+      author: user,
+      content,
+    };
+    return runOptimisticOperation(
+      () => sendComment(post.id, localComment),
+      () => setPost({ ...post, comments: [...post.comments, localComment] }),
+      'Failed to comment',
+      (newComment) =>
+        setPost({ ...post, comments: [...post.comments, newComment] }),
+    );
   };
 
   return (
