@@ -50,27 +50,41 @@ const commentsBank = [
   'Highly recommended 👀',
 ];
 
+interface Failure {
+  description: string;
+  retry: () => Promise<void>;
+}
+
 export default function Home({ post: originalPost, user }: Props) {
   const [post, setPost] = useState<Post>(originalPost);
+  const [failure, setFailure] = useState<Failure>(null);
 
   const upvote = async (): Promise<void> => {
     try {
+      setFailure(null);
       await sendUpvote(post.id);
       setPost({ ...post, upvotes: post.upvotes + 1 });
     } catch (err) {
-      console.error('failed to send upvote');
+      setFailure({
+        description: 'Failed to upvote',
+        retry: upvote,
+      });
     }
   };
 
-  const comment = async (): Promise<void> => {
+  const comment = async (content: string): Promise<void> => {
     try {
+      setFailure(null);
       const newComment = await sendComment(post.id, {
         author: user,
-        content: commentsBank[Math.floor(Math.random() * commentsBank.length)],
+        content,
       });
       setPost({ ...post, comments: [...post.comments, newComment] });
     } catch (err) {
-      console.error('failed to send new comment');
+      setFailure({
+        description: 'Failed to comment',
+        retry: async () => comment(content),
+      });
     }
   };
 
@@ -97,7 +111,14 @@ export default function Home({ post: originalPost, user }: Props) {
           <button className={styles.button} onClick={upvote}>
             Upvote ({post.upvotes})
           </button>
-          <button className={styles.button} onClick={comment}>
+          <button
+            className={styles.button}
+            onClick={() =>
+              comment(
+                commentsBank[Math.floor(Math.random() * commentsBank.length)],
+              )
+            }
+          >
             Comment
           </button>
         </div>
@@ -115,6 +136,14 @@ export default function Home({ post: originalPost, user }: Props) {
           </article>
         ))}
       </main>
+      {failure && (
+        <div className={styles.alert}>
+          <span>{failure.description}</span>
+          <button className={styles.retryButton} onClick={failure.retry}>
+            Retry
+          </button>
+        </div>
+      )}
     </div>
   );
 }
