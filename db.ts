@@ -31,7 +31,7 @@ export const users: User[] = [
   },
 ];
 
-export const posts: {[key: string]: Post} = {
+export const posts: { [key: string]: Post } = {
   1: {
     title: 'My 5 Practical CSS Tips',
     link: 'https://daily.dev/posts/my-5-practical-css-tips',

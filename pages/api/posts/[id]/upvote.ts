@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import {Post, posts} from '../../../../db';
+import { Post, posts } from '../../../../db';
 
 export default (req: NextApiRequest, res: NextApiResponse<Post>) => {
   const post = posts[req.query.id as string];
@@ -9,4 +9,4 @@ export default (req: NextApiRequest, res: NextApiResponse<Post>) => {
   } else {
     res.status(404).end();
   }
-}
+};
