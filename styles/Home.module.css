@@ -112,9 +112,9 @@
   bottom: 2rem;
   align-items: center;
   padding: 1rem 1.5rem;
-  color: #FFFFFF;
-  background: #FF999A;
-  border: 1px solid #F50002;
+  color: #ffffff;
+  background: #ff999a;
+  border: 1px solid #f50002;
   border-radius: 0.5rem;
   z-index: 2;
 }
@@ -125,8 +125,8 @@
   justify-content: center;
   margin-left: 0.5rem;
   padding: 0.3rem 0.6rem;
-  color: #FFFFFF;
-  background: #FFFFFF3D;
+  color: #ffffff;
+  background: #ffffff3d;
   border: none;
   border-radius: 0.5rem;
   font-size: 1rem;
@@ -135,5 +135,5 @@
 }
 
 .retryButton:hover {
-  background: #FFFFFF5C;
+  background: #ffffff5c;
 }

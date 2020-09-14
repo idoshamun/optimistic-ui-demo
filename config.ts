@@ -5,5 +5,5 @@ export interface Config {
 
 export default {
   fail: false,
-  delay: 1000,
+  delay: 2000,
 };

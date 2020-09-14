@@ -3,6 +3,7 @@ import styles from '../styles/Home.module.css';
 import { Comment, Post, posts, User, users } from '../db';
 import { GetServerSidePropsResult } from 'next';
 import { useState } from 'react';
+import cloneDeep from 'lodash.clonedeep';
 
 interface Props {
   user: User;
@@ -60,11 +61,13 @@ export default function Home({ post: originalPost, user }: Props) {
   const [failure, setFailure] = useState<Failure>(null);
 
   const upvote = async (): Promise<void> => {
+    const oldPost = cloneDeep(post);
     try {
       setFailure(null);
-      await sendUpvote(post.id);
       setPost({ ...post, upvotes: post.upvotes + 1 });
+      await sendUpvote(post.id);
     } catch (err) {
+      setPost(oldPost);
       setFailure({
         description: 'Failed to upvote',
         retry: upvote,
@@ -73,14 +76,18 @@ export default function Home({ post: originalPost, user }: Props) {
   };
 
   const comment = async (content: string): Promise<void> => {
+    const oldPost = cloneDeep(post);
     try {
       setFailure(null);
-      const newComment = await sendComment(post.id, {
+      const localComment = {
         author: user,
         content,
-      });
+      };
+      setPost({ ...post, comments: [...post.comments, localComment] });
+      const newComment = await sendComment(post.id, localComment);
       setPost({ ...post, comments: [...post.comments, newComment] });
     } catch (err) {
+      setPost(oldPost);
       setFailure({
         description: 'Failed to comment',
         retry: async () => comment(content),
