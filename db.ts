@@ -9,8 +9,9 @@ export interface Comment {
 }
 
 export interface Post {
+  id: string;
   title: string;
-  link: string;
+  image: string;
   upvotes: number;
   comments: Comment[];
 }
@@ -33,8 +34,10 @@ export const users: User[] = [
 
 export const posts: { [key: string]: Post } = {
   1: {
+    id: '1',
     title: 'My 5 Practical CSS Tips',
-    link: 'https://daily.dev/posts/my-5-practical-css-tips',
+    image:
+      'https://assets.website-files.com/5e0f1144930a8bc8aace526c/5f5781a139a480750a05c35b_sam-dan-truong--rF4kuvgHhU-unsplash.jpg',
     upvotes: 0,
     comments: [
       {

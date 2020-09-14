@@ -1,7 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Comment, posts } from '../../../../db';
+import configMiddleware from '../../../../configMiddleware';
 
-export default (req: NextApiRequest, res: NextApiResponse<Comment>) => {
+export default async (req: NextApiRequest, res: NextApiResponse<Comment>) => {
+  await configMiddleware(req, res);
   const post = posts[req.query.id as string];
   if (post) {
     const comment = req.body as Comment;

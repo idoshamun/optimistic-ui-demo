@@ -1,65 +1,120 @@
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
+import { Comment, Post, posts, User, users } from '../db';
+import { GetServerSidePropsResult } from 'next';
+import { useState } from 'react';
 
-export default function Home() {
+interface Props {
+  user: User;
+  post: Post;
+}
+
+export function getServerSideProps(): GetServerSidePropsResult<Props> {
+  return {
+    props: {
+      post: Object.values(posts)[0],
+      user: users[Math.floor(Math.random() * users.length)],
+    },
+  };
+}
+
+async function sendRequest<T>(url: string, opts: RequestInit): Promise<T> {
+  const res = await fetch(url, opts);
+  if (res.status >= 400) {
+    throw new Error('Unexpected error');
+  }
+  if (res.status === 200) {
+    return res.json();
+  }
+  return null;
+}
+
+const sendUpvote = (postId: string): Promise<void> =>
+  sendRequest(`/api/posts/${postId}/upvote`, {
+    method: 'POST',
+  });
+
+const sendComment = (postId: string, comment: Comment): Promise<Comment> =>
+  sendRequest(`/api/posts/${postId}/comment`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(comment),
+  });
+
+const commentsBank = [
+  'I hate CSS 😡',
+  'Awesome tips 🤯',
+  'I want more! 🔥',
+  'Highly recommended 👀',
+];
+
+export default function Home({ post: originalPost, user }: Props) {
+  const [post, setPost] = useState<Post>(originalPost);
+
+  const upvote = async (): Promise<void> => {
+    try {
+      await sendUpvote(post.id);
+      setPost({ ...post, upvotes: post.upvotes + 1 });
+    } catch (err) {
+      console.error('failed to send upvote');
+    }
+  };
+
+  const comment = async (): Promise<void> => {
+    try {
+      const newComment = await sendComment(post.id, {
+        author: user,
+        content: commentsBank[Math.floor(Math.random() * commentsBank.length)],
+      });
+      setPost({ ...post, comments: [...post.comments, newComment] });
+    } catch (err) {
+      console.error('failed to send new comment');
+    }
+  };
+
   return (
     <div className={styles.container}>
       <Head>
-        <title>Create Next App</title>
+        <title>Optimistic UI</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
+      <header className={styles.header}>
+        <div className={styles.userName}>{user.name}</div>
+        <img
+          className={styles.profileImage}
+          src={user.image}
+          alt="Your profile picture"
+        />
+      </header>
+
       <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+        <h1 className={styles.title}>{post.title}</h1>
+        <img className={styles.postImage} src={post.image} alt="Post image" />
+        <div className={styles.buttons}>
+          <button className={styles.button} onClick={upvote}>
+            Upvote ({post.upvotes})
+          </button>
+          <button className={styles.button} onClick={comment}>
+            Comment
+          </button>
         </div>
+        {post.comments.map((comment, index) => (
+          <article key={index} className={styles.comment}>
+            <img
+              className={styles.commentProfileImage}
+              src={comment.author.image}
+              alt="Profile picture"
+            />
+            <div className={styles.commentInfo}>
+              <div className={styles.commentAuthor}>{comment.author.name}</div>
+              <div>{comment.content}</div>
+            </div>
+          </article>
+        ))}
       </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
     </div>
   );
 }
