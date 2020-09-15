@@ -1,30 +1,56 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Optimistic UI Demo
+
+This code is assosicated with my talk about Optimistic UI. You can find the [slides here](https://docs.google.com/presentation/d/1fuySoPxVNVgo6ynQuhbJZCEeugqBuzCqD7JavEsIHjk/edit?usp=sharing).
+
+
+## About
+
+The project shows the difference ins the user experience between the classic interaction model and Optimistic UI.
+
+It showcases the difference in web page where you can add a comment and upvote an article.
+
+Every time you refresh the page, the server assigns a random user as the logged-in user.
+All data is stored in-memory and is cleared once you close the server.
+When you click on the comment button the app chooses randomly the content of the comment.
+
+The repository is made of two branches:
+* `classic-interaction`
+* `optimistic-ui`
 
 ## Getting Started
 
-First, run the development server:
-
+Checkout the branch and you want:
 ```bash
-npm run dev
+git checkout classic-interaction
 # or
-yarn dev
+git checkout optimistic-ui
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Install dependencies:
+```bash
+npm i
+```
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+Run the development server:
+```bash
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-To learn more about Next.js, take a look at the following resources:
+## Configuration
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The server can add an artificial delay to the upvote and comment requests and can set to fail.
+These two settings highlight the differences between the classic interaction model and Optimistic UI.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+To change the configuration, you can send a POST request to `/api/config`.
+Example:
+```bash
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"delay":1000,"fail":true}' \
+  http://localhost:3000/api/config
+```
+This will set the config to always fail after 1s delay.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/import?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+By default, the config is to delay response in 1s and to succeed.
